@@ -13,9 +13,9 @@ Minilife is a baby simulator game where users control and manage the needs of a 
 
 ## Current State
 -   Premium UI with Glassmorphism and high-quality assets.
--   Phaser engine with interactive feedback and synthesized sounds.
--   **Toy Box (Item System)**: Integrated interactive toys (Duck, Bear, Rattle).
--   Persistence and Growth systems active.
+-   **Visual Growth System**: 4 stages of baby evolution (Newborn, Infant, Crawler, Toddler).
+-   Phaser engine with evolution animations and synthesized sounds.
+-   Toy Box (Item System) and Sound System integrated.
 
 ## Roadmap & Suggestions
 -   [x] **Phaser Integration**: Initialize Phaser.js engine and move game logic.
@@ -28,6 +28,6 @@ Minilife is a baby simulator game where users control and manage the needs of a 
 
 -   [x] Project initialization and initial log creation.
 -   [x] Tech stack decision: Phaser.js + HTML/CSS.
--   [x] Successful GitHub push and authentication setup (`gh` CLI).
+-   [x] **Visual Growth System**: Implemented 4 visual stages with evolution effects.
 -   [x] **Sound System Implemented**: Synthesized chimes and effects via Web Audio API.
 -   [x] **Toy Box System**: Added Duck, Bear, and Rattle with specific stat boosts.
