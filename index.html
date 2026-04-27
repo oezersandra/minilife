@@ -15,6 +15,8 @@
     <main id="game-container">
         <h1>MiniLife</h1>
         
+        <div id="growth-info" class="growth-info">Day 1 • Newborn</div>
+
         <div class="character-container" id="phaser-container">
             <!-- Phaser canvas will be injected here -->
         </div>
@@ -49,12 +51,23 @@
                     <div id="happiness-bar" class="progress-fill happiness-fill"></div>
                 </div>
             </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Hygiene</span>
+                    <span id="hygiene-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="hygiene-bar" class="progress-fill hygiene-fill"></div>
+                </div>
+            </div>
         </div>
 
         <div class="controls">
             <button id="btn-feed" title="Feed the baby">🍼 Feed</button>
             <button id="btn-sleep" title="Put baby to sleep">💤 Sleep</button>
             <button id="btn-play" title="Play with baby">🧸 Play</button>
+            <button id="btn-clean" title="Clean the baby">🛁 Clean</button>
         </div>
 
         <div id="status-message" class="status-message">Baby is happy and healthy!</div>

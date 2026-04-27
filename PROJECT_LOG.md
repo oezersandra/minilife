@@ -12,20 +12,20 @@ Minilife is a baby simulator game where users control and manage the needs of a 
 6.  **Cross-Platform**: Designed for Web/Mobile/Desktop using Capacitor wrapping; porting for Consoles.
 
 ## Current State
--   Basic project structure established (HTML/CSS/JS).
--   Core stats implemented: Hunger, Sleep, Happiness.
--   Basic interactions: Feed, Sleep, Play.
--   Static baby visual (currently a placeholder `baby.png`).
+-   Premium UI with Glassmorphism and high-quality assets.
+-   Phaser engine with interactive feedback.
+-   **Phase 2 Implemented**: Persistence (Save/Load), Hygiene stat, and Growth System (Days Alive).
+-   Local dev server running.
 
 ## Roadmap & Suggestions
--   [ ] **Phaser Integration**: Initialize Phaser.js engine and move game logic.
--   [ ] **Visual Enhancements**: Generate premium assets for the baby and environment.
--   [ ] **Persistence**: Implement saving and loading stats via `localStorage`.
--   [ ] **Growth System**: Add a progression mechanic where the baby "grows" or levels up.
+-   [x] **Phaser Integration**: Initialize Phaser.js engine and move game logic.
+-   [x] **Visual Enhancements**: Generate premium assets for the baby and environment.
+-   [x] **Persistence**: Implement saving and loading stats via `localStorage`.
+-   [x] **Growth System**: Add a progression mechanic where the baby "grows" or levels up.
 -   [ ] **Sound System**: Integrate immersive sound effects.
 -   [ ] **Expanded Interactions**: Add more items and activities (e.g., bathing, dressing up).
--   [ ] **Advanced UI**: Implement glassmorphism, smooth transitions, and responsive layout.
+-   [x] **Advanced UI**: Implement glassmorphism, smooth transitions, and responsive layout.
 
-## Completed Milestones
 -   [x] Project initialization and initial log creation.
 -   [x] Tech stack decision: Phaser.js + HTML/CSS.
+-   [x] Successful GitHub push and authentication setup (`gh` CLI).
