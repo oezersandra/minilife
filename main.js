@@ -1,75 +1,64 @@
-class BabyScene extends Phaser.Scene {
+class SoundManager {
     constructor() {
-        super('BabyScene');
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    preload() {
-        this.load.image('baby', 'baby.png');
+    playTone(freq, type, duration, volume = 0.1) {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
     }
 
+    feed() { this.playTone(440, 'sine', 0.5); setTimeout(() => this.playTone(660, 'sine', 0.5), 100); }
+    sleep() { this.playTone(330, 'sine', 1.5, 0.05); this.playTone(220, 'sine', 2.0, 0.05); }
+    play() { [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.3), i * 100)); }
+    clean() { for (let i = 0; i < 5; i++) setTimeout(() => this.playTone(800 + Math.random() * 400, 'triangle', 0.1, 0.05), i * 50); }
+    
+    toy() {
+        const notes = [440, 554, 659, 880];
+        notes.forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.2, 0.03), i * 80));
+    }
+}
+
+class BabyScene extends Phaser.Scene {
+    constructor() { super('BabyScene'); }
+    preload() { this.load.image('baby', 'baby.png'); }
     create() {
         this.baby = this.add.container(200, 200);
         this.babyImage = this.add.image(0, 0, 'baby');
         this.babyImage.setDisplaySize(180, 180);
-        
         const shadow = this.add.circle(0, 80, 60, 0x000000, 0.2);
         shadow.setScale(1, 0.3);
-        
         this.baby.add([shadow, this.babyImage]);
+        this.tweens.add({ targets: this.baby, y: 190, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-        this.tweens.add({
-            targets: this.baby,
-            y: 190,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-
-        // Event listeners for game actions
         this.game.events.on('feed', () => this.onAction('🍼'));
         this.game.events.on('sleep', () => this.onAction('💤'));
         this.game.events.on('play', () => this.onAction('🧸'));
         this.game.events.on('clean', () => this.onAction('🛁'));
+        this.game.events.on('toy', (emoji) => this.onAction(emoji));
     }
 
     onAction(emoji) {
         const text = this.add.text(0, -100, emoji, { fontSize: '48px' }).setOrigin(0.5);
         this.baby.add(text);
-
-        this.tweens.add({
-            targets: text,
-            y: -160,
-            alpha: 0,
-            duration: 1500,
-            ease: 'Cubic.easeOut',
-            onComplete: () => text.destroy()
-        });
-
-        this.tweens.add({
-            targets: this.babyImage,
-            scale: 1.1,
-            duration: 150,
-            yoyo: true,
-            ease: 'Back.easeOut'
-        });
+        this.tweens.add({ targets: text, y: -160, alpha: 0, duration: 1500, ease: 'Cubic.easeOut', onComplete: () => text.destroy() });
+        this.tweens.add({ targets: this.babyImage, scale: 1.1, duration: 150, yoyo: true, ease: 'Back.easeOut' });
     }
 }
 
 class GameController {
     constructor() {
-        this.stats = {
-            hunger: 100,
-            sleep: 100,
-            happiness: 100,
-            hygiene: 100
-        };
-        
-        this.growth = {
-            days: 1,
-            lastUpdate: Date.now()
-        };
-
+        this.stats = { hunger: 100, sleep: 100, happiness: 100, hygiene: 100 };
+        this.growth = { days: 1, lastUpdate: Date.now() };
         this.elements = {
             hungerBar: document.getElementById('hunger-bar'),
             sleepBar: document.getElementById('sleep-bar'),
@@ -82,18 +71,10 @@ class GameController {
             growthInfo: document.getElementById('growth-info'),
             statusMessage: document.getElementById('status-message')
         };
-
-        const config = {
-            type: Phaser.AUTO,
-            parent: 'phaser-container',
-            width: 400,
-            height: 400,
-            transparent: true,
-            scene: BabyScene
-        };
-
-        this.phaserGame = new Phaser.Game(config);
-        
+        this.phaserGame = new Phaser.Game({
+            type: Phaser.AUTO, parent: 'phaser-container', width: 400, height: 400, transparent: true, scene: BabyScene
+        });
+        this.sounds = new SoundManager();
         this.loadGame();
         this.setupEventListeners();
         this.startGameLoop();
@@ -109,45 +90,47 @@ class GameController {
         }
     }
 
-    saveGame() {
-        const data = {
-            stats: this.stats,
-            growth: this.growth
-        };
-        localStorage.setItem('minilife_save', JSON.stringify(data));
-    }
+    saveGame() { localStorage.setItem('minilife_save', JSON.stringify({ stats: this.stats, growth: this.growth })); }
 
     setupEventListeners() {
-        document.getElementById('btn-feed').addEventListener('click', () => this.interact('hunger', 20, "Yummy! Baby is eating.", 'feed'));
-        document.getElementById('btn-sleep').addEventListener('click', () => this.interact('sleep', 30, "Shhh... Baby is resting.", 'sleep'));
-        document.getElementById('btn-play').addEventListener('click', () => this.interact('happiness', 25, "Giggle! Baby is playing.", 'play'));
-        document.getElementById('btn-clean').addEventListener('click', () => this.interact('hygiene', 35, "Splosh! Baby is clean now.", 'clean'));
+        document.getElementById('btn-feed').addEventListener('click', () => this.interact('hunger', 20, "Yummy! Baby is eating.", 'feed', () => this.sounds.feed()));
+        document.getElementById('btn-sleep').addEventListener('click', () => this.interact('sleep', 30, "Shhh... Baby is resting.", 'sleep', () => this.sounds.sleep()));
+        document.getElementById('btn-play').addEventListener('click', () => this.interact('happiness', 25, "Giggle! Baby is playing.", 'play', () => this.sounds.play()));
+        document.getElementById('btn-clean').addEventListener('click', () => this.interact('hygiene', 35, "Splosh! Baby is clean now.", 'clean', () => this.sounds.clean()));
+
+        // Toy Box Listeners
+        document.getElementById('item-duck').addEventListener('click', () => this.useToy('hygiene', 15, "Quack! Baby loves the duck.", '🦆'));
+        document.getElementById('item-bear').addEventListener('click', () => this.useToy('sleep', 15, "Snuggle time with the bear.", '🧸'));
+        document.getElementById('item-rattle').addEventListener('click', () => this.useToy('happiness', 20, "Shake shake! Happy baby.", '🪇'));
     }
 
-    interact(stat, amount, message, eventName) {
+    useToy(stat, amount, message, emoji) {
+        this.stats[stat] = Math.min(100, this.stats[stat] + amount);
+        this.stats.happiness = Math.min(100, this.stats.happiness + 5); // All toys give small happiness boost
+        this.updateUI();
+        this.showMessage(message);
+        this.phaserGame.events.emit('toy', emoji);
+        this.sounds.toy();
+        this.saveGame();
+    }
+
+    interact(stat, amount, message, eventName, soundEffect) {
         this.stats[stat] = Math.min(100, this.stats[stat] + amount);
         this.updateUI();
         this.showMessage(message);
         this.phaserGame.events.emit(eventName);
+        if (soundEffect) soundEffect();
         this.saveGame();
     }
 
     startGameLoop() {
         setInterval(() => {
-            // Stats decay
             this.stats.hunger = Math.max(0, this.stats.hunger - 0.2);
             this.stats.sleep = Math.max(0, this.stats.sleep - 0.1);
             this.stats.happiness = Math.max(0, this.stats.happiness - 0.3);
             this.stats.hygiene = Math.max(0, this.stats.hygiene - 0.15);
-            
-            // Growth progression (1 day every 5 minutes for testing, can be real-time later)
             const now = Date.now();
-            if (now - this.growth.lastUpdate > 300000) { // 5 minutes
-                this.growth.days++;
-                this.growth.lastUpdate = now;
-                this.showMessage("Yay! Baby is growing! 🎉");
-            }
-            
+            if (now - this.growth.lastUpdate > 300000) { this.growth.days++; this.growth.lastUpdate = now; this.showMessage("Yay! Baby is growing! 🎉"); }
             this.updateUI();
             this.checkStatus();
             this.saveGame();
@@ -159,14 +142,11 @@ class GameController {
         this.elements.sleepBar.style.width = `${this.stats.sleep}%`;
         this.elements.happinessBar.style.width = `${this.stats.happiness}%`;
         this.elements.hygieneBar.style.width = `${this.stats.hygiene}%`;
-
         this.elements.hungerValue.innerText = `${Math.round(this.stats.hunger)}%`;
         this.elements.sleepValue.innerText = `${Math.round(this.stats.sleep)}%`;
         this.elements.happinessValue.innerText = `${Math.round(this.stats.happiness)}%`;
         this.elements.hygieneValue.innerText = `${Math.round(this.stats.hygiene)}%`;
-
-        const stage = this.getGrowthStage();
-        this.elements.growthInfo.innerText = `Day ${this.growth.days} • ${stage}`;
+        this.elements.growthInfo.innerText = `Day ${this.growth.days} • ${this.getGrowthStage()}`;
     }
 
     getGrowthStage() {
@@ -183,12 +163,7 @@ class GameController {
         else if (this.stats.hygiene < 20) this.showMessage("Baby needs a bath! 🛁");
     }
 
-    showMessage(text) {
-        this.elements.statusMessage.innerText = text;
-        this.elements.statusMessage.style.opacity = 1;
-    }
+    showMessage(text) { this.elements.statusMessage.innerText = text; this.elements.statusMessage.style.opacity = 1; }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    new GameController();
-});
+window.addEventListener('DOMContentLoaded', () => { new GameController(); });
