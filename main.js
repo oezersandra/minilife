@@ -80,7 +80,7 @@ class BabyController {
 class GameController {
     constructor() {
         this.stats = { hunger: 100, sleep: 100, happiness: 100, hygiene: 100 };
-        this.growth = { days: 43, lastUpdate: Date.now() };
+        this.growth = { xp: 0, level: 1, lastUpdate: Date.now() };
         this.baby = new BabyController();
         this.sounds = new SoundManager();
         this.loadGame();
@@ -93,7 +93,8 @@ class GameController {
         const saved = localStorage.getItem('minilife_save_v2');
         if (saved) {
             const d = JSON.parse(saved);
-            this.stats = d.stats; this.growth = d.growth;
+            this.stats = d.stats; 
+            this.growth = d.growth || { xp: 0, level: 1, lastUpdate: Date.now() };
         }
     }
 
@@ -101,26 +102,45 @@ class GameController {
         localStorage.setItem('minilife_save_v2', JSON.stringify({ stats: this.stats, growth: this.growth })); 
     }
 
+    gainXP(amount) {
+        this.growth.xp += amount;
+        const nextLevelXP = this.growth.level * 150;
+        if (this.growth.xp >= nextLevelXP) {
+            this.growth.level++;
+            this.growth.xp = 0;
+            this.applyLevelUpEffect();
+        }
+        this.updateUI();
+    }
+
+    applyLevelUpEffect() {
+        const container = document.getElementById('baby-container');
+        container.style.transition = 'transform 1s ease';
+        container.style.transform = 'scale(1.2)';
+        setTimeout(() => container.style.transform = 'scale(1)', 1000);
+        this.sounds.play(); // Play a happy sound on level up
+    }
+
     setupEventListeners() {
         document.getElementById('btn-feed').addEventListener('click', () => {
             this.stats.hunger = Math.min(100, this.stats.hunger + 15);
             this.baby.playAnimation([0, 1, 2, 3, 4], 6);
             this.sounds.feed();
-            this.updateUI();
+            this.gainXP(20);
             this.saveGame();
         });
         document.getElementById('btn-sleep').addEventListener('click', () => {
             this.stats.sleep = Math.min(100, this.stats.sleep + 25);
             this.baby.playAnimation([5, 6, 7, 8, 9], 3, true);
             this.sounds.sleep();
-            this.updateUI();
+            this.gainXP(25);
             this.saveGame();
         });
         document.getElementById('btn-play').addEventListener('click', () => {
             this.stats.happiness = Math.min(100, this.stats.happiness + 20);
             this.baby.playAnimation([15, 16, 17, 18, 19], 8);
             this.sounds.play();
-            this.updateUI();
+            this.gainXP(30);
             this.saveGame();
         });
         document.getElementById('btn-clean').addEventListener('click', () => {
@@ -129,7 +149,7 @@ class GameController {
             this.baby.playAnimation([15, 16, 17, 18, 19], 5);
             this.createBubbles();
             this.sounds.clean();
-            this.updateUI();
+            this.gainXP(20);
             this.saveGame();
             setTimeout(() => this.applyShine(), 1500);
         });
@@ -182,9 +202,30 @@ class GameController {
         update('happiness-bar', this.stats.happiness);
         update('hygiene-bar', this.stats.hygiene);
         
+        // Update XP Bar
+        const nextLevelXP = this.growth.level * 150;
+        const xpPercent = (this.growth.xp / nextLevelXP) * 100;
+        const xpFill = document.getElementById('xp-fill');
+        if (xpFill) xpFill.style.width = `${xpPercent}%`;
+        const xpVal = document.getElementById('xp-value');
+        if (xpVal) xpVal.innerText = `${Math.round(this.growth.xp)} / ${nextLevelXP}`;
+
+        // Growth Stages and Scaling
+        let stage = "SÄUGLING";
+        if (this.growth.level > 30) stage = "KIND";
+        else if (this.growth.level > 15) stage = "KLEINKIND";
+        else if (this.growth.level > 5) stage = "KRABBLER";
+
         const gInfo = document.getElementById('growth-info');
-        if (gInfo) gInfo.innerText = `TAG ${this.growth.days} • KLEINKIND`;
+        if (gInfo) gInfo.innerText = `LEVEL ${this.growth.level} • ${stage}`;
         
+        // Permanent visual growth (1% per level, starting from 1.0)
+        const babyContainer = document.getElementById('baby-container');
+        if (babyContainer) {
+            const currentScale = 0.8 + (this.growth.level * 0.01);
+            babyContainer.style.transform = `scale(${Math.min(1.5, currentScale)})`;
+        }
+
         const msg = document.getElementById('status-message');
         const needsAttention = this.stats.hunger < 20 || this.stats.sleep < 20 || this.stats.happiness < 20 || this.stats.hygiene < 20;
 
