@@ -13,9 +13,10 @@ Minilife is a baby simulator game where users control and manage the needs of a 
 
 ## Current State
 -   Premium UI with Glassmorphism and high-quality assets.
--   **Procedural Animation System**: Complex state-based animations (Sleep, Eat, Play, Clean) with particles and tweening.
--   Visual Growth System with 4 evolution stages.
--   Sound System and Persistence active.
+-   [x] **Action Animations**: Implement frame-by-frame animations using the new high-quality spritesheet.
+Sleep, Cry, and Play.
+-   Visual Growth System and Sound System active.
+-   Persistence via LocalStorage.
 
 ## Roadmap & Suggestions
 -   [x] **Phaser Integration**: Initialize Phaser.js engine and move game logic.

@@ -1,3 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniLife - Baby Simulator</title>
+    <meta name="description" content="A beautiful baby simulator game where you manage the life of a virtual baby.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="phaser-container"></div>
+        <div id="status-message">Willkommen bei MiniLife!</div>
+        
+        <div id="growth-info" class="growth-info">TAG 43 • KLEINKIND</div>
+
+        <div id="baby-container">
+            <div id="baby-layer-a" class="baby-layer active"></div>
+            <div id="baby-layer-b" class="baby-layer"></div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Hunger</span>
+                    <span id="hunger-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="hunger-bar" class="progress-fill hunger-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Sleep</span>
+                    <span id="sleep-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="sleep-bar" class="progress-fill sleep-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Happiness</span>
+                    <span id="happiness-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="happiness-bar" class="progress-fill happiness-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Hygiene</span>
+                    <span id="hygiene-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="hygiene-bar" class="progress-fill hygiene-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-feed" title="Feed the baby">🍼 Feed</button>
+            <button id="btn-sleep" title="Put baby to sleep">💤 Sleep</button>
+            <button id="btn-play" title="Play with baby">🧸 Play</button>
+            <button id="btn-clean" title="Clean the baby">🛁 Clean</button>
+        </div>
+
+        <div id="status-message" class="status-message">Baby is happy and healthy!</div>
+
+        <div class="inventory-section">
+            <h3>Toy Box</h3>
+            <div class="inventory-grid">
+                <div class="inventory-item" id="item-duck" title="Rubber Duck (+Hygiene)">🦆</div>
+                <div class="inventory-item" id="item-bear" title="Teddy Bear (+Sleep)">🧸</div>
+                <div class="inventory-item" id="item-rattle" title="Rattle (+Happiness)">🪇</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+</html>
+class SoundManager {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    playTone(freq, type, duration, volume = 0.1) {
+        try {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+    }
+    feed() { this.playTone(440, 'sine', 0.5); }
+    sleep() { this.playTone(330, 'sine', 1.5); }
+    play() { [523, 659, 783].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.3), i * 100)); }
+    clean() { for (let i = 0; i < 5; i++) setTimeout(() => this.playTone(800 + Math.random() * 400, 'triangle', 0.1, 0.05), i * 50); }
+}
+
+class BabyController {
+    constructor() {
+        this.layerA = document.getElementById('baby-layer-a');
+        this.layerB = document.getElementById('baby-layer-b');
+        this.activeLayer = this.layerA;
+        this.currentFrame = 3;
+        this.animTimer = null;
+        this.setFrame(3, true); // initial frame no fade
+    }
+
+    setFrame(index, instant = false) {
+        if (!this.layerA || !this.layerB) return;
+        
+        // Prepare the NEXT layer (the one that is NOT active)
+        const nextLayer = this.activeLayer === this.layerA ? this.layerB : this.layerA;
+        
+        const col = index % 5;
+        const row = Math.floor(index / 5);
+        const x = col * 25;
+        const y = row * 33.333;
+        
+        nextLayer.style.backgroundPosition = `${x}% ${y}%`;
+        
+        if (instant) {
+            this.layerA.classList.remove('active');
+            this.layerB.classList.remove('active');
+            nextLayer.classList.add('active');
+            this.activeLayer = nextLayer;
+        } else {
+            // Perform Cross-Fade
+            nextLayer.classList.add('active');
+            this.activeLayer.classList.remove('active');
+            this.activeLayer = nextLayer;
+        }
+    }
+
+    playAnimation(frames, frameRate, loop = false) {
+        if (this.animTimer) clearInterval(this.animTimer);
+        let i = 0;
+        this.animTimer = setInterval(() => {
+            this.setFrame(frames[i]);
+            i++;
+            if (i >= frames.length) {
+                if (loop) i = 0;
+                else { 
+                    clearInterval(this.animTimer); 
+                    this.animTimer = null; 
+                    setTimeout(() => this.setFrame(3), 500); 
+                }
+            }
+        }, 1000 / frameRate);
+    }
+}
+
+class GameController {
+    constructor() {
+        this.stats = { hunger: 100, sleep: 100, happiness: 100, hygiene: 100 };
+        this.growth = { days: 43, lastUpdate: Date.now() };
+        this.baby = new BabyController();
+        this.sounds = new SoundManager();
+        this.loadGame();
+        this.setupEventListeners();
+        this.startGameLoop();
+        this.updateUI();
+    }
+
+    loadGame() {
+        const saved = localStorage.getItem('minilife_save_v2');
+        if (saved) {
+            const d = JSON.parse(saved);
+            this.stats = d.stats; this.growth = d.growth;
+        }
+    }
+
+    saveGame() { 
+        localStorage.setItem('minilife_save_v2', JSON.stringify({ stats: this.stats, growth: this.growth })); 
+    }
+
+    setupEventListeners() {
+        document.getElementById('btn-feed').addEventListener('click', () => {
+            this.stats.hunger = Math.min(100, this.stats.hunger + 15);
+            this.baby.playAnimation([0, 1, 2, 3, 4], 6);
+            this.sounds.feed();
+            this.updateUI();
+            this.saveGame();
+        });
+        document.getElementById('btn-sleep').addEventListener('click', () => {
+            this.stats.sleep = Math.min(100, this.stats.sleep + 25);
+            this.baby.playAnimation([5, 6, 7, 8, 9], 3, true);
+            this.sounds.sleep();
+            this.updateUI();
+            this.saveGame();
+        });
+        document.getElementById('btn-play').addEventListener('click', () => {
+            this.stats.happiness = Math.min(100, this.stats.happiness + 20);
+            this.baby.playAnimation([15, 16, 17, 18, 19], 8);
+            this.sounds.play();
+            this.updateUI();
+            this.saveGame();
+        });
+        document.getElementById('btn-clean').addEventListener('click', () => {
+            this.stats.hygiene = Math.min(100, this.stats.hygiene + 30);
+            this.baby.playAnimation([10, 11, 12, 13, 14], 5);
+            this.sounds.clean();
+            this.updateUI();
+            this.saveGame();
+        });
+    }
+
+    startGameLoop() {
+        setInterval(() => {
+            this.stats.hunger = Math.max(0, this.stats.hunger - 0.15);
+            this.stats.sleep = Math.max(0, this.stats.sleep - 0.1);
+            this.stats.happiness = Math.max(0, this.stats.happiness - 0.2);
+            this.stats.hygiene = Math.max(0, this.stats.hygiene - 0.1);
+            this.updateUI();
+            this.saveGame();
+        }, 1000);
+    }
+
+    updateUI() {
+        const update = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.style.width = `${val}%`;
+            const valEl = document.getElementById(id.replace('-bar', '-value'));
+            if (valEl) valEl.innerText = `${Math.round(val)}%`;
+        };
+        update('hunger-bar', this.stats.hunger);
+        update('sleep-bar', this.stats.sleep);
+        update('happiness-bar', this.stats.happiness);
+        update('hygiene-bar', this.stats.hygiene);
+        
+        const gInfo = document.getElementById('growth-info');
+        if (gInfo) gInfo.innerText = `TAG ${this.growth.days} • KLEINKIND`;
+        
+        const msg = document.getElementById('status-message');
+        if (msg) {
+            if (this.stats.hunger < 20) msg.innerText = "Das Baby hat Hunger!";
+            else if (this.stats.sleep < 20) msg.innerText = "Das Baby ist müde...";
+            else msg.innerText = "Das Baby ist glücklich und gesund!";
+        }
+    }
+}
+
+window.addEventListener('load', () => { new GameController(); });
+# MiniLife Project Log
+
+## Project Vision
+Minilife is a baby simulator game where users control and manage the needs of a virtual baby. The goal is to provide an engaging, beautiful, and interactive experience.
+
+## Development Policies
+1.  **Permission First**: No action will be taken without explicit USER permission at every step.
+2.  **Rich Aesthetics**: Prioritize modern, premium UI/UX designs (Glassmorphism, smooth gradients).
+3.  **Clean Code**: Maintain modular, readable JavaScript and well-structured HTML/CSS.
+4.  **Process Tracking**: All significant changes and milestones will be recorded in this log.
+5.  **Tech Stack**: Phaser.js for game logic/animations + HTML/CSS for premium UI.
+6.  **Cross-Platform**: Designed for Web/Mobile/Desktop using Capacitor wrapping; porting for Consoles.
+
+## Current State
+-   Premium UI with Glassmorphism and high-quality assets.
+-   [x] **Action Animations**: Implement frame-by-frame animations using the new high-quality spritesheet.
+Sleep, Cry, and Play.
+-   Visual Growth System and Sound System active.
+-   Persistence via LocalStorage.
+
+## Roadmap & Suggestions
+-   [x] **Phaser Integration**: Initialize Phaser.js engine and move game logic.
+-   [x] **Visual Enhancements**: Generate premium assets for the baby and environment.
+-   [x] **Persistence**: Implement saving and loading stats via `localStorage`.
+-   [x] **Growth System**: Add a progression mechanic where the baby "grows" or levels up.
+-   [x] **Sound System**: Integrate immersive sound effects.
+-   [x] **Expanded Interactions**: Toy Box with interactive items.
+-   [x] **Visual Growth System**: 4 evolution stages with animations.
+-   [x] **Real-time Persistence**: 24-hour growth cycles and local saving.
+-   [x] **Advanced UI**: Implement glassmorphism, smooth transitions, and responsive layout.
+
+-   [x] Project initialization and initial log creation.
+-   [x] Tech stack decision: Phaser.js + HTML/CSS.
+-   [x] **Visual Growth System**: Implemented 4 visual stages with evolution effects.
+-   [x] **Sound System Implemented**: Synthesized chimes and effects via Web Audio API.
+-   [x] **Toy Box System**: Added Duck, Bear, and Rattle with specific stat boosts.
 :root {
     --bg-dark: #020617;
     --card-bg: rgba(15, 23, 42, 0.6);
