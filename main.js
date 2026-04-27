@@ -125,10 +125,37 @@ class GameController {
         });
         document.getElementById('btn-clean').addEventListener('click', () => {
             this.stats.hygiene = Math.min(100, this.stats.hygiene + 30);
-            this.baby.playAnimation([10, 11, 12, 13, 14], 5);
+            // Using frames 15-19 (Happy/Playing) instead of 10-14 (Crying)
+            this.baby.playAnimation([15, 16, 17, 18, 19], 5);
+            this.createBubbles();
             this.sounds.clean();
             this.updateUI();
             this.saveGame();
+            setTimeout(() => this.applyShine(), 1500);
+        });
+    }
+
+    createBubbles() {
+        const container = document.getElementById('baby-container');
+        for (let i = 0; i < 15; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = 10 + Math.random() * 30;
+            b.style.width = `${size}px`;
+            b.style.height = `${size}px`;
+            b.style.left = `${Math.random() * 100}%`;
+            b.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
+            b.style.animationDelay = `${Math.random() * 0.5}s`;
+            container.appendChild(b);
+            setTimeout(() => b.remove(), 2500);
+        }
+    }
+
+    applyShine() {
+        const layers = document.querySelectorAll('.baby-layer');
+        layers.forEach(l => {
+            l.classList.add('shine-effect');
+            setTimeout(() => l.classList.remove('shine-effect'), 1000);
         });
     }
 
@@ -159,10 +186,21 @@ class GameController {
         if (gInfo) gInfo.innerText = `TAG ${this.growth.days} • KLEINKIND`;
         
         const msg = document.getElementById('status-message');
+        const needsAttention = this.stats.hunger < 20 || this.stats.sleep < 20 || this.stats.happiness < 20 || this.stats.hygiene < 20;
+
         if (msg) {
-            if (this.stats.hunger < 20) msg.innerText = "Das Baby hat Hunger!";
-            else if (this.stats.sleep < 20) msg.innerText = "Das Baby ist müde...";
+            if (this.stats.hunger < 20) msg.innerText = "Das Baby hat großen Hunger!";
+            else if (this.stats.sleep < 20) msg.innerText = "Das Baby ist völlig übermüdet...";
+            else if (this.stats.happiness < 20) msg.innerText = "Das Baby ist einsam...";
+            else if (this.stats.hygiene < 20) msg.innerText = "Das Baby möchte gebadet werden!";
             else msg.innerText = "Das Baby ist glücklich und gesund!";
+        }
+
+        // Trigger crying animation if needs are low and no action is currently playing
+        if (needsAttention && !this.baby.animTimer) {
+            this.baby.playAnimation([10, 11, 12, 13, 14], 3, true);
+        } else if (!needsAttention && this.baby.currentFrame >= 10 && this.baby.currentFrame <= 14 && !this.baby.animTimer) {
+            this.baby.setFrame(3);
         }
     }
 }
