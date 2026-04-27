@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniLife - Baby Simulator</title>
+    <meta name="description" content="A beautiful baby simulator game where you manage the life of a virtual baby.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+    <main id="game-container">
+        <h1>MiniLife</h1>
+        
+        <div class="character-container" id="phaser-container">
+            <!-- Phaser canvas will be injected here -->
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Hunger</span>
+                    <span id="hunger-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="hunger-bar" class="progress-fill hunger-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Sleep</span>
+                    <span id="sleep-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="sleep-bar" class="progress-fill sleep-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">
+                    <span>Happiness</span>
+                    <span id="happiness-value">100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="happiness-bar" class="progress-fill happiness-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-feed" title="Feed the baby">🍼 Feed</button>
+            <button id="btn-sleep" title="Put baby to sleep">💤 Sleep</button>
+            <button id="btn-play" title="Play with baby">🧸 Play</button>
+        </div>
+
+        <div id="status-message" class="status-message">Baby is happy and healthy!</div>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+</html>
