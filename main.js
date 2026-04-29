@@ -19,6 +19,14 @@ class SoundManager {
     feed()  { this.playTone(440, 'sine', 0.5); }
     sleep() { this.playTone(330, 'sine', 1.5); }
     play()  { [523,659,783].forEach((f,i) => setTimeout(() => this.playTone(f,'sine',0.3), i*100)); }
+    laugh() { 
+        let t = 0;
+        for(let i=0; i<14; i++) {
+            const freq = 800 + Math.random() * 200 + (i % 2 === 0 ? 150 : -50) - (i * 10);
+            setTimeout(() => this.playTone(freq, 'sine', 0.1, 0.06), t);
+            t += 90 + Math.random() * 40 + (i * 2);
+        }
+    }
     clean() { for(let i=0;i<5;i++) setTimeout(() => this.playTone(800+Math.random()*400,'triangle',0.1,0.05),i*50); }
     pop()   { this.playTone(1200,'sine',0.1,0.05); }
     rattle(){ for(let i=0;i<3;i++) setTimeout(() => this.playTone(1000+Math.random()*500,'square',0.05,0.03),i*80); }
@@ -132,6 +140,7 @@ class BabyController {
         this.mouthHappy = document.getElementById('mouth-happy');
         this.mouthSad   = document.getElementById('mouth-sad');
         this.mouthOpen  = document.getElementById('mouth-open');
+        this.mouthLaugh = document.getElementById('mouth-laugh');
         this.tearL      = document.getElementById('tear-left');
         this.tearR      = document.getElementById('tear-right');
         this.sleepZ     = [document.getElementById('sleep-z1'), document.getElementById('sleep-z2'), document.getElementById('sleep-z3')];
@@ -225,6 +234,10 @@ class BabyController {
         }
     }
 
+    triggerLaugh(duration = 2) {
+        this.laughTimer = duration;
+    }
+
     _animate(ts) {
         this._raf = requestAnimationFrame((t) => this._animate(t));
         const dt = 0.016;
@@ -242,13 +255,14 @@ class BabyController {
 
         // Head bob
         this.shakeOffset = Math.sin(this.t * 18) * (wCrying * 9);
+        const laughBounce = this.laughTimer > 0 ? Math.abs(Math.sin(this.t * 20)) * 12 : 0;
         this.springHeadX.target = this.noiseHead.get(this.t * s * 0.7) * 8 + this.shakeOffset;
-        this.springHeadY.target = this.noiseHead.get(this.t * s * 0.5 + 100) * 5 + (wSleep * 3);
+        this.springHeadY.target = this.noiseHead.get(this.t * s * 0.5 + 100) * 5 + (wSleep * 3) - laughBounce;
         const hx = this.springHeadX.update(), hy = this.springHeadY.update();
 
         // Body breathe
         const breatheSpeed = wSleep > 0.5 ? 1.1 : 2.4;
-        this.springBodyY.target = Math.sin(this.t * breatheSpeed) * (wSleep > 0.5 ? 3.0 : 1.8);
+        this.springBodyY.target = Math.sin(this.t * breatheSpeed) * (wSleep > 0.5 ? 3.0 : 1.8) - (laughBounce * 0.5);
         const by = this.springBodyY.update();
         const exhale = Math.sin(this.t * breatheSpeed) * 0.025 + 1;
         this.springBodySX.target = 1 + (exhale - 1) * 0.5;
@@ -336,14 +350,36 @@ class BabyController {
             if (this.wiggleT > 20) { this.wiggleActive = false; this.wiggleT = 0; }
         }
 
-        this._applyStateEffects(wIdle, wCrying, wSleep, wFeed, wPlay);
+        this._applyStateEffects({ idle: wIdle, crying: wCrying, sleeping: wSleep, feeding: wFeed, playing: wPlay }, dt);
     }
 
-    _applyStateEffects(wIdle, wCrying, wSleep, wFeed, wPlay) {
+    _applyStateEffects(w, dt) {
+        // Opacities
+        const cryOp = w.crying;
+        const feedOp = w.feeding;
+        const sleepOp = w.sleeping;
+        
+        let happyOp = 1 - Math.max(cryOp, feedOp, sleepOp);
+        let laughOp = 0;
+        
+        if (this.laughTimer > 0) {
+            this.laughTimer -= dt;
+            laughOp = 1;
+            happyOp = 0;
+            // Squint eyes slightly when laughing
+            this.eyelidL.setAttribute('cy', -8);
+            this.eyelidR.setAttribute('cy', -8);
+        }
+
+        if (this.mouthHappy) this.mouthHappy.setAttribute('opacity', happyOp);
+        if (this.mouthSad) this.mouthSad.setAttribute('opacity', cryOp);
+        if (this.mouthOpen) this.mouthOpen.setAttribute('opacity', Math.max(feedOp, sleepOp));
+        if (this.mouthLaugh) this.mouthLaugh.setAttribute('opacity', laughOp);
+
         // Tears
-        if (wCrying > 0.01) {
+        if (cryOp > 0.01) {
             this.tearPhase += 0.07;
-            const tearOp = (0.5 + 0.5 * Math.sin(this.tearPhase)) * wCrying;
+            const tearOp = (0.5 + 0.5 * Math.sin(this.tearPhase)) * cryOp;
             this.tearL.setAttribute('opacity', tearOp); this.tearR.setAttribute('opacity', tearOp);
             this.tearL.setAttribute('cy', 18 + Math.sin(this.tearPhase) * 5);
             this.tearR.setAttribute('cy', 18 + Math.sin(this.tearPhase + 1) * 5);
@@ -351,16 +387,9 @@ class BabyController {
             this.tearL.setAttribute('opacity', 0); this.tearR.setAttribute('opacity', 0);
         }
 
-        // Mouth
-        if (!this.isYawning) {
-            this.mouthHappy.setAttribute('opacity', Math.min(1, Math.max(0, wIdle + wPlay + wSleep * 0.5 - wCrying - wFeed)));
-            this.mouthSad.setAttribute('opacity', Math.min(1, wCrying * 1.2));
-            this.mouthOpen.setAttribute('opacity', Math.min(1, wFeed * 1.2));
-        }
-
         // Sleep eyes & Zzz
-        if (wSleep > 0.01 && !this.isBlinking && !this.isYawning) {
-            const eyelidClose = -10 + 9 * wSleep;
+        if (sleepOp > 0.01 && !this.isBlinking && !this.isYawning) {
+            const eyelidClose = -10 + 9 * sleepOp;
             this.eyelidL.setAttribute('cy', eyelidClose); this.eyelidR.setAttribute('cy', eyelidClose);
         } else if (!this.isBlinking && !this.isYawning && wSleep < 0.05) {
             this.eyelidL.setAttribute('cy', -10); this.eyelidR.setAttribute('cy', -10);
@@ -444,6 +473,7 @@ class GameController {
             this.baby.setState('feeding', 3000);
             this.sounds.feed(); this.gainXP(20); this.saveGame();
             this.toggleSleepMode(false);
+            this.showFeedingBottle();
         });
         document.getElementById('btn-sleep').addEventListener('click', () => {
             this.stats.sleep = Math.min(100, this.stats.sleep + 25);
@@ -454,7 +484,8 @@ class GameController {
         document.getElementById('btn-play').addEventListener('click', () => {
             this.stats.happiness = Math.min(100, this.stats.happiness + 20);
             this.baby.setState('playing', 4000);
-            this.sounds.play(); this.gainXP(30); this.saveGame();
+            this.baby.triggerLaugh(1.5);
+            this.sounds.laugh(); this.gainXP(30); this.saveGame();
         });
         document.getElementById('btn-clean').addEventListener('click', () => {
             this.stats.hygiene = Math.min(100, this.stats.hygiene + 30);
@@ -465,18 +496,63 @@ class GameController {
         document.getElementById('btn-game').addEventListener('click', () => this.startMinigame());
         document.getElementById('btn-close-game').addEventListener('click', () => this.endMinigame(0, true));
 
-        document.getElementById('item-duck').addEventListener('click', () => {
-            this.stats.hygiene = Math.min(100, this.stats.hygiene + 25);
-            this.baby.setState('playing', 2000); this.sounds.clean(); this.gainXP(10); this.updateUI();
-        });
-        document.getElementById('item-bear').addEventListener('click', () => {
-            this.stats.sleep = Math.min(100, this.stats.sleep + 10);
-            this.baby.setState('sleeping', 3000); this.sounds.sleep(); this.gainXP(10); this.updateUI();
-        });
-        document.getElementById('item-rattle').addEventListener('click', () => {
-            this.stats.happiness = Math.min(100, this.stats.happiness + 15);
-            this.baby.setState('playing', 2000); this.sounds.rattle(); this.gainXP(15); this.updateUI();
-        });
+        this.setupToyBox();
+    }
+
+    setupToyBox() {
+        const bindToy = (id, stat, amount, state, soundFn, emoji) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('on-cooldown')) return;
+                
+                this.stats[stat] = Math.min(100, this.stats[stat] + amount);
+                this.baby.setState(state, 2500);
+                soundFn.call(this.sounds);
+                this.gainXP(15);
+                this.updateUI();
+                this.spawnToyParticles(emoji);
+                
+                btn.classList.add('on-cooldown');
+                setTimeout(() => btn.classList.remove('on-cooldown'), 10000); // 10s cooldown
+            });
+        };
+
+        bindToy('item-duck', 'hygiene', 25, 'playing', this.sounds.clean, '🫧');
+        bindToy('item-bear', 'sleep', 15, 'sleeping', this.sounds.sleep, '💤');
+        bindToy('item-rattle', 'happiness', 20, 'playing', this.sounds.rattle, '🎵');
+    }
+
+    spawnToyParticles(emoji) {
+        const container = document.getElementById('baby-container');
+        if (!container) return;
+        
+        for (let i = 0; i < 6; i++) {
+            const p = document.createElement('div');
+            p.innerText = emoji;
+            p.className = 'toy-particle';
+            p.style.left = `calc(50% + ${(Math.random() - 0.5) * 80}px)`;
+            p.style.top = `calc(50% + ${(Math.random() - 0.5) * 40 - 20}px)`;
+            p.style.animationDelay = `${Math.random() * 0.2}s`;
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 2000);
+        }
+    }
+
+    showFeedingBottle() {
+        const container = document.getElementById('baby-container');
+        if (!container) return;
+        
+        const bottle = document.createElement('div');
+        bottle.innerText = '🍼';
+        bottle.className = 'feeding-bottle';
+        
+        container.appendChild(bottle);
+        
+        // Remove after the 3000ms feeding state finishes
+        setTimeout(() => {
+            if (bottle) bottle.remove();
+        }, 3000);
     }
 
     toggleSleepMode(on) {
