@@ -36,13 +36,38 @@ class BubblePopScene extends Phaser.Scene {
         const x = Phaser.Math.Between(50, 450), y = 650;
         const radius = Phaser.Math.Between(20, 50);
         const color  = Phaser.Display.Color.RandomRGB().color;
+        
+        let points = 5;
+        if (radius < 30) points = 15;
+        else if (radius < 40) points = 10;
+        
         const bubble = this.add.circle(x, y, radius, color, 0.6);
         bubble.setStrokeStyle(2, 0xffffff, 0.8);
         this.bubbles.add(bubble);
         bubble.setInteractive();
         bubble.on('pointerdown', () => {
-            this.score++;
+            this.score += points;
             window.gameInstance.sounds.pop();
+            
+            const popup = this.add.text(bubble.x, bubble.y, `+${points}`, {
+                fontFamily: 'Outfit',
+                fontSize: '24px',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 3,
+                fontStyle: 'bold'
+            });
+            popup.setOrigin(0.5, 0.5);
+            
+            this.tweens.add({
+                targets: popup,
+                y: popup.y - 40,
+                alpha: 0,
+                duration: 800,
+                ease: 'Power1',
+                onComplete: () => popup.destroy()
+            });
+            
             bubble.destroy();
             document.getElementById('minigame-score').innerText = `Punkte: ${this.score}`;
         });
