@@ -31,6 +31,8 @@ Sleep, Cry, and Play.
 
 -   [x] Project initialization and initial log creation.
 -   [x] Tech stack decision: Phaser.js + HTML/CSS.
--   [x] **Visual Growth System**: Implemented 4 visual stages with evolution effects.
--   [x] **Sound System Implemented**: Synthesized chimes and effects via Web Audio API.
--   [x] **Toy Box System**: Added Duck, Bear, and Rattle with specific stat boosts.
+-   [x] **Visual Growth System**: Implemented 4 visual stages (Säugling, Krabbler, Kleinkind, Kind) with automatic sprite swapping.
+-   [x] **Sound System Implemented**: Synthesized chimes, effects, and rattle sound via Web Audio API.
+-   [x] **Toy Box System**: Added Duck (+Hygiene), Bear (+Sleep), and Rattle (+Happiness) with unique animations.
+-   [x] **UI Polish**: Added Glassmorphism sleep overlay and fixed HTML/CSS structural issues.
+-   [x] **Minigame**: Functional Bubble Pop minigame using Phaser.js.
