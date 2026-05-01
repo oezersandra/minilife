@@ -135,12 +135,17 @@ class BabyController {
         this.legRight   = document.getElementById('baby-leg-right');
         this.eyelidL    = document.getElementById('eyelid-left');
         this.eyelidR    = document.getElementById('eyelid-right');
+        this.eyeLeft     = document.getElementById('baby-eye-left');
+        this.eyeRight    = document.getElementById('baby-eye-right');
+        this.sleepEyeL   = document.getElementById('sleep-eye-left');
+        this.sleepEyeR   = document.getElementById('sleep-eye-right');
         this.irisL      = document.getElementById('iris-left');
         this.irisR      = document.getElementById('iris-right');
         this.mouthHappy = document.getElementById('mouth-happy');
         this.mouthSad   = document.getElementById('mouth-sad');
         this.mouthOpen  = document.getElementById('mouth-open');
         this.mouthLaugh = document.getElementById('mouth-laugh');
+        this.mouthTongue = document.getElementById('mouth-tongue');
         this.tearL      = document.getElementById('tear-left');
         this.tearR      = document.getElementById('tear-right');
         this.sleepZ     = [document.getElementById('sleep-z1'), document.getElementById('sleep-z2'), document.getElementById('sleep-z3')];
@@ -269,17 +274,26 @@ class BabyController {
         this.springBodySY.target = exhale;
         const bsx = this.springBodySX.update(), bsy = this.springBodySY.update();
 
-        // Arms
-        const armBoost = wPlay * 20 + wCrying * 15;
-        this.springArmL.target = (20 + armBoost) + this.noiseArm.get(this.t * s * 0.9) * (12 + wPlay * 8);
-        this.springArmR.target = (20 + armBoost) + this.noiseArm.get(this.t * s * 0.9 + 50) * (12 + wPlay * 8);
+        // Arms: subtle idle sway, bigger happy waves, smaller fussy shakes.
+        const armEnergy = (wIdle * 0.2) + (wFeed * 0.35) + (wPlay * 1.0) + (wCrying * 0.75);
+        const armBoost = wPlay * 16 + wCrying * 12 - wSleep * 18;
+        const armWaveSpeed = 3.2 + wPlay * 6.5 + wCrying * 5.5;
+        const armWaveSize = (4 + armEnergy * 18) * (1 - wSleep * 0.75);
+        const armWaveL = Math.sin(this.t * armWaveSpeed + 0.4) * armWaveSize;
+        const armWaveR = Math.sin(this.t * armWaveSpeed + Math.PI + 0.2) * armWaveSize;
+        const armFlutterL = Math.sin(this.t * 13.5) * wCrying * 6;
+        const armFlutterR = Math.sin(this.t * 14.5 + 1.4) * wCrying * 6;
+        this.springArmL.target = (16 + armBoost) + this.noiseArm.get(this.t * s * 0.9) * (8 + wPlay * 6) + armWaveL + armFlutterL;
+        this.springArmR.target = (16 + armBoost) + this.noiseArm.get(this.t * s * 0.9 + 50) * (8 + wPlay * 6) + armWaveR + armFlutterR;
         const alA = this.springArmL.update(), arA = this.springArmR.update();
 
-        // Legs
-        const legSpeed = this.t * (wPlay * 1.8 + wCrying * 1.2 + wIdle * 0.4) * 1.4;
+        // Legs: soft seated kicks that pick up when playing or upset.
+        const legSpeed = this.t * (wPlay * 2.3 + wCrying * 1.7 + wFeed * 0.8 + wIdle * 0.45) * 1.6;
         const legScale = 1 - wSleep * 0.7;
-        this.springLegL.target = this.noiseLeg.get(legSpeed) * (10 + wPlay * 15) * legScale;
-        this.springLegR.target = this.noiseLeg.get(legSpeed + 30) * (10 + wPlay * 15) * legScale;
+        const legKickL = Math.sin(legSpeed * 2.2) * (5 + wPlay * 18 + wCrying * 11) * legScale;
+        const legKickR = Math.sin(legSpeed * 2.2 + Math.PI) * (5 + wPlay * 18 + wCrying * 11) * legScale;
+        this.springLegL.target = (this.noiseLeg.get(legSpeed) * (7 + wPlay * 8) + legKickL) * legScale;
+        this.springLegR.target = (this.noiseLeg.get(legSpeed + 30) * (7 + wPlay * 8) + legKickR) * legScale;
         const llA = this.springLegL.update(), lrA = this.springLegR.update();
 
         // Gaze
@@ -292,10 +306,16 @@ class BabyController {
         const headRot = hx * 0.25 + this.shakeOffset * 0.1;
         this.headGroup.setAttribute('transform', `translate(${100 + hx}, ${75 + hy}) rotate(${headRot}, 0, 0)`);
         this.bodyGroup.setAttribute('transform', `translate(100, ${130 + by}) scale(${bsx.toFixed(4)}, ${bsy.toFixed(4)})`);
-        this.armLeft.setAttribute('transform', `translate(-38,-10) rotate(${-alA}, 0, -10)`);
-        this.armRight.setAttribute('transform', `translate(38,-10) rotate(${arA}, 0, -10)`);
-        this.legLeft.setAttribute('transform', `translate(-18,42) rotate(${llA}, 0, 0)`);
-        this.legRight.setAttribute('transform', `translate(18,42) rotate(${lrA}, 0, 0)`);
+        const armReach = Math.sin(this.t * armWaveSpeed * 0.5) * (1.5 + wPlay * 3) * (1 - wSleep);
+        const armLift = -wPlay * 5 + wSleep * 8 + Math.sin(this.t * 2.2) * 1.2 * wIdle;
+        this.armLeft.setAttribute('transform', `translate(${-48 - armReach}, ${-18 + armLift}) rotate(${-alA}, 0, -10)`);
+        this.armRight.setAttribute('transform', `translate(${48 + armReach}, ${-18 + armLift}) rotate(${arA}, 0, -10)`);
+
+        const legBounceL = -Math.max(0, Math.sin(legSpeed * 2.2)) * (wPlay * 6 + wCrying * 4) * legScale;
+        const legBounceR = -Math.max(0, Math.sin(legSpeed * 2.2 + Math.PI)) * (wPlay * 6 + wCrying * 4) * legScale;
+        const legSpread = Math.sin(this.t * 2.4) * (wIdle * 1.2 + wPlay * 2.5) * legScale;
+        this.legLeft.setAttribute('transform', `translate(${-18 - legSpread}, ${42 + legBounceL}) rotate(${llA}, 0, 0)`);
+        this.legRight.setAttribute('transform', `translate(${18 + legSpread}, ${42 + legBounceR}) rotate(${lrA}, 0, 0)`);
         this.irisL.setAttribute('cx', gx); this.irisL.setAttribute('cy', gy);
         this.irisR.setAttribute('cx', gx); this.irisR.setAttribute('cy', gy);
 
@@ -306,7 +326,7 @@ class BabyController {
         }
         if (this.isBlinking) {
             this.blinkProgress += dt * 8;
-            const eyelidY = -10 + 10 * Math.sin(this.blinkProgress * Math.PI);
+            const eyelidY = -17 + 17 * Math.sin(this.blinkProgress * Math.PI);
             if (wSleep < 0.5) { this.eyelidL.setAttribute('cy', eyelidY); this.eyelidR.setAttribute('cy', eyelidY); }
             if (this.blinkProgress >= 1) this.isBlinking = false;
         }
@@ -321,8 +341,8 @@ class BabyController {
         if (this.isYawning) {
             this.yawnProgress += dt * 1.2;
             const yawnOpen = Math.sin(this.yawnProgress * Math.PI);
-            this.eyelidL.setAttribute('cy', -10 + 6 * yawnOpen);
-            this.eyelidR.setAttribute('cy', -10 + 6 * yawnOpen);
+            this.eyelidL.setAttribute('cy', -17 + 10 * yawnOpen);
+            this.eyelidR.setAttribute('cy', -17 + 10 * yawnOpen);
             this.mouthOpen.setAttribute('rx', 8 + yawnOpen * 6);
             this.mouthOpen.setAttribute('ry', 4 + yawnOpen * 8);
             this.mouthOpen.setAttribute('opacity', yawnOpen * 0.9);
@@ -367,14 +387,15 @@ class BabyController {
             laughOp = 1;
             happyOp = 0;
             // Squint eyes slightly when laughing
-            this.eyelidL.setAttribute('cy', -8);
-            this.eyelidR.setAttribute('cy', -8);
+            this.eyelidL.setAttribute('cy', -14);
+            this.eyelidR.setAttribute('cy', -14);
         }
 
         if (this.mouthHappy) this.mouthHappy.setAttribute('opacity', happyOp);
         if (this.mouthSad) this.mouthSad.setAttribute('opacity', cryOp);
         if (this.mouthOpen) this.mouthOpen.setAttribute('opacity', Math.max(feedOp, sleepOp));
         if (this.mouthLaugh) this.mouthLaugh.setAttribute('opacity', laughOp);
+        if (this.mouthTongue) this.mouthTongue.setAttribute('opacity', Math.max(happyOp, laughOp) * 0.88);
 
         // Tears
         if (cryOp > 0.01) {
@@ -388,11 +409,19 @@ class BabyController {
         }
 
         // Sleep eyes & Zzz
+        if (this.eyeLeft && this.eyeRight && this.sleepEyeL && this.sleepEyeR) {
+            const openEyeOp = 1 - Math.min(1, sleepOp * 1.4);
+            const closedEyeOp = Math.min(1, sleepOp * 1.4);
+            this.eyeLeft.setAttribute('opacity', openEyeOp);
+            this.eyeRight.setAttribute('opacity', openEyeOp);
+            this.sleepEyeL.setAttribute('opacity', closedEyeOp);
+            this.sleepEyeR.setAttribute('opacity', closedEyeOp);
+        }
         if (sleepOp > 0.01 && !this.isBlinking && !this.isYawning) {
-            const eyelidClose = -10 + 9 * sleepOp;
+            const eyelidClose = -17 + 16 * sleepOp;
             this.eyelidL.setAttribute('cy', eyelidClose); this.eyelidR.setAttribute('cy', eyelidClose);
         } else if (!this.isBlinking && !this.isYawning && wSleep < 0.05) {
-            this.eyelidL.setAttribute('cy', -10); this.eyelidR.setAttribute('cy', -10);
+            this.eyelidL.setAttribute('cy', -17); this.eyelidR.setAttribute('cy', -17);
         }
         if (wSleep > 0.3) {
             this.sleepZPhase += 0.018;

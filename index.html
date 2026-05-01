@@ -24,6 +24,10 @@
                 <span>Wachstum</span>
                 <span id="xp-value">0 / 150</span>
             </div>
+            <div class="stat-label coin-label">
+                <span>Baby-Münzen</span>
+                <span id="coin-value">🪙 100</span>
+            </div>
             <div class="progress-bar xp-bar">
                 <div id="xp-fill" class="progress-fill xp-fill"></div>
             </div>
@@ -33,111 +37,177 @@
             <!-- CSS/SVG baby character - fully procedurally animated -->
             <svg id="baby-svg" viewBox="0 -40 200 260" xmlns="http://www.w3.org/2000/svg" width="200" height="260">
                 <defs>
-                    <radialGradient id="skinGrad" cx="50%" cy="40%" r="60%">
-                        <stop offset="0%" stop-color="#fde8d0"/>
-                        <stop offset="100%" stop-color="#f5c5a3"/>
+                    <radialGradient id="skinGrad" cx="42%" cy="32%" r="72%">
+                        <stop offset="0%" stop-color="#ffe7c7"/>
+                        <stop offset="58%" stop-color="#ffc994"/>
+                        <stop offset="100%" stop-color="#f2a06f"/>
                     </radialGradient>
                     <radialGradient id="cheekGrad" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="#ffb3b3" stop-opacity="0.7"/>
-                        <stop offset="100%" stop-color="#ffb3b3" stop-opacity="0"/>
+                        <stop offset="0%" stop-color="#ff8fb1" stop-opacity="0.75"/>
+                        <stop offset="100%" stop-color="#ff8fb1" stop-opacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="onesieGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#9be8ed"/>
+                        <stop offset="100%" stop-color="#57c4ce"/>
+                    </linearGradient>
+                    <radialGradient id="eyeGrad" cx="42%" cy="35%" r="62%">
+                        <stop offset="0%" stop-color="#93c5fd"/>
+                        <stop offset="65%" stop-color="#6366f1"/>
+                        <stop offset="100%" stop-color="#312e81"/>
                     </radialGradient>
                     <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#00000033"/>
+                        <feDropShadow dx="2" dy="5" stdDeviation="5" flood-color="#0000002f"/>
                     </filter>
                 </defs>
 
                 <!-- Body group - for breathing/body sway -->
                 <g id="baby-body-group" transform="translate(100,130)">
                     <!-- Body -->
-                    <ellipse id="baby-body" cx="0" cy="0" rx="40" ry="48" fill="url(#skinGrad)" filter="url(#softShadow)"/>
-                    <!-- Onesie -->
-                    <ellipse cx="0" cy="8" rx="37" ry="42" fill="#a5f3fc" opacity="0.85"/>
-                    <!-- Onesie buttons -->
-                    <circle cx="0" cy="-8" r="3" fill="white" opacity="0.6"/>
-                    <circle cx="0" cy="2" r="3" fill="white" opacity="0.6"/>
-                    <circle cx="0" cy="12" r="3" fill="white" opacity="0.6"/>
+                    <path id="baby-body" d="M -34 -18 Q -43 16 -32 52 Q -18 69 0 70 Q 18 69 32 52 Q 43 16 34 -18 Q 16 -28 -16 -28 Z"
+                          fill="url(#skinGrad)" stroke="#875034" stroke-width="2.4" stroke-linejoin="round" filter="url(#softShadow)"/>
+                    <ellipse cx="0" cy="2" rx="16" ry="12" fill="#ffd8b5" opacity="0.32"/>
+                    <circle cx="0" cy="10" r="2.2" fill="#c77a58" opacity="0.45"/>
+                    <!-- Diaper -->
+                    <path d="M -33 25 Q -22 15 0 18 Q 22 15 33 25 Q 31 54 14 65 Q 0 71 -14 65 Q -31 54 -33 25 Z"
+                          fill="#f8fafc" stroke="#7fb6c3" stroke-width="2.4" stroke-linejoin="round"/>
+                    <path d="M -33 25 Q -18 36 0 35 Q 18 36 33 25" fill="none" stroke="#c7eef6" stroke-width="2.3" stroke-linecap="round"/>
+                    <path d="M -30 28 L -39 36 Q -32 44 -24 39 Z" fill="#eefbff" stroke="#7fb6c3" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M 30 28 L 39 36 Q 32 44 24 39 Z" fill="#eefbff" stroke="#7fb6c3" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M -12 55 Q 0 62 12 55" fill="none" stroke="#d8eef4" stroke-width="2" stroke-linecap="round"/>
 
                     <!-- Left arm group -->
-                    <g id="baby-arm-left" transform="translate(-38,-10)">
-                        <ellipse cx="0" cy="0" rx="10" ry="18" fill="url(#skinGrad)" transform="rotate(-20)"/>
-                        <!-- Hand -->
-                        <ellipse cx="-6" cy="16" rx="8" ry="7" fill="url(#skinGrad)" transform="rotate(-20) translate(0,8)"/>
+                    <g id="baby-arm-left" transform="translate(-48,-18)">
+                        <path d="M 8 13 Q -10 -1 -24 -18" fill="none" stroke="#875034" stroke-width="16" stroke-linecap="round"/>
+                        <path d="M 8 13 Q -10 -1 -24 -18" fill="none" stroke="url(#skinGrad)" stroke-width="12" stroke-linecap="round"/>
+                        <ellipse cx="6" cy="13" rx="6" ry="7" fill="url(#skinGrad)" opacity="0.95"/>
+                        <g transform="translate(-29,-24) rotate(-22)">
+                            <ellipse cx="0" cy="2" rx="12" ry="10.5" fill="url(#skinGrad)" stroke="#875034" stroke-width="2.2"/>
+                            <ellipse cx="-10" cy="-5" rx="3.8" ry="7" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(-48)"/>
+                            <ellipse cx="-4" cy="-10" rx="3.4" ry="7.2" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(-18)"/>
+                            <ellipse cx="3" cy="-10.5" rx="3.4" ry="7" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(9)"/>
+                            <ellipse cx="10" cy="-6" rx="3.5" ry="6.6" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(42)"/>
+                            <ellipse cx="-4" cy="4" rx="4" ry="2.2" fill="#ffd8b5" opacity="0.55"/>
+                        </g>
                     </g>
 
                     <!-- Right arm group -->
-                    <g id="baby-arm-right" transform="translate(38,-10)">
-                        <ellipse cx="0" cy="0" rx="10" ry="18" fill="url(#skinGrad)" transform="rotate(20)"/>
-                        <!-- Hand -->
-                        <ellipse cx="6" cy="16" rx="8" ry="7" fill="url(#skinGrad)" transform="rotate(20) translate(0,8)"/>
+                    <g id="baby-arm-right" transform="translate(48,-18)">
+                        <path d="M -8 13 Q 10 -1 24 -18" fill="none" stroke="#875034" stroke-width="16" stroke-linecap="round"/>
+                        <path d="M -8 13 Q 10 -1 24 -18" fill="none" stroke="url(#skinGrad)" stroke-width="12" stroke-linecap="round"/>
+                        <ellipse cx="-6" cy="13" rx="6" ry="7" fill="url(#skinGrad)" opacity="0.95"/>
+                        <g transform="translate(29,-24) rotate(22)">
+                            <ellipse cx="0" cy="2" rx="12" ry="10.5" fill="url(#skinGrad)" stroke="#875034" stroke-width="2.2"/>
+                            <ellipse cx="-10" cy="-6" rx="3.5" ry="6.6" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(-42)"/>
+                            <ellipse cx="-3" cy="-10.5" rx="3.4" ry="7" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(-9)"/>
+                            <ellipse cx="4" cy="-10" rx="3.4" ry="7.2" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(18)"/>
+                            <ellipse cx="10" cy="-5" rx="3.8" ry="7" fill="url(#skinGrad)" stroke="#875034" stroke-width="1.8" transform="rotate(48)"/>
+                            <ellipse cx="4" cy="4" rx="4" ry="2.2" fill="#ffd8b5" opacity="0.55"/>
+                        </g>
                     </g>
 
                     <!-- Left leg -->
                     <g id="baby-leg-left" transform="translate(-18,42)">
-                        <ellipse cx="0" cy="0" rx="12" ry="16" fill="#a5f3fc"/>
-                        <ellipse cx="0" cy="14" rx="10" ry="8" fill="url(#skinGrad)"/>
+                        <path d="M -2 -2 Q -19 8 -17 25 Q -13 39 0 35 Q 10 28 6 14 Q 4 5 -2 -2 Z"
+                              fill="url(#skinGrad)" stroke="#875034" stroke-width="2.3" stroke-linejoin="round"/>
+                        <ellipse cx="-9" cy="29" rx="15" ry="10" fill="url(#skinGrad)" stroke="#875034" stroke-width="2.3" transform="rotate(-20)"/>
+                        <ellipse cx="-15" cy="27" rx="2.4" ry="3.4" fill="#b86549" opacity="0.48" transform="rotate(-20)"/>
+                        <ellipse cx="-10" cy="31" rx="2" ry="3" fill="#b86549" opacity="0.42" transform="rotate(-10)"/>
+                        <ellipse cx="-5" cy="32" rx="1.7" ry="2.6" fill="#b86549" opacity="0.35"/>
                     </g>
                     <!-- Right leg -->
                     <g id="baby-leg-right" transform="translate(18,42)">
-                        <ellipse cx="0" cy="0" rx="12" ry="16" fill="#a5f3fc"/>
-                        <ellipse cx="0" cy="14" rx="10" ry="8" fill="url(#skinGrad)"/>
+                        <path d="M 2 -2 Q 19 8 17 25 Q 13 39 0 35 Q -10 28 -6 14 Q -4 5 2 -2 Z"
+                              fill="url(#skinGrad)" stroke="#875034" stroke-width="2.3" stroke-linejoin="round"/>
+                        <ellipse cx="9" cy="29" rx="15" ry="10" fill="url(#skinGrad)" stroke="#875034" stroke-width="2.3" transform="rotate(20)"/>
+                        <ellipse cx="15" cy="27" rx="2.4" ry="3.4" fill="#b86549" opacity="0.48" transform="rotate(20)"/>
+                        <ellipse cx="10" cy="31" rx="2" ry="3" fill="#b86549" opacity="0.42" transform="rotate(10)"/>
+                        <ellipse cx="5" cy="32" rx="1.7" ry="2.6" fill="#b86549" opacity="0.35"/>
                     </g>
                 </g>
 
                 <!-- Head group - separate for head bobbing/looking around -->
                 <g id="baby-head-group" transform="translate(100,75)">
+                    <!-- Ears sit behind the head so they read as side-attached, not face-facing. -->
+                    <g transform="translate(-55,3) scale(0.74)">
+                        <path d="M 6 -15 C -8 -16 -18 -6 -18 7 C -18 21 -6 28 7 19 C 0 13 -1 4 5 -2 C 11 -8 13 -14 6 -15 Z"
+                              fill="url(#skinGrad)" stroke="#875034" stroke-width="2.4" stroke-linejoin="round"/>
+                        <path d="M -5 -4 C -12 0 -12 12 -4 15" fill="none" stroke="#b96145" stroke-width="2" stroke-linecap="round" opacity="0.72"/>
+                        <path d="M -5 6 C 1 6 3 10 0 14" fill="none" stroke="#b96145" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+                        <ellipse cx="-7" cy="8" rx="4.5" ry="6" fill="#ffb38c" opacity="0.24"/>
+                    </g>
+                    <g transform="translate(55,3) scale(0.74)">
+                        <path d="M -6 -15 C 8 -16 18 -6 18 7 C 18 21 6 28 -7 19 C 0 13 1 4 -5 -2 C -11 -8 -13 -14 -6 -15 Z"
+                              fill="url(#skinGrad)" stroke="#875034" stroke-width="2.4" stroke-linejoin="round"/>
+                        <path d="M 5 -4 C 12 0 12 12 4 15" fill="none" stroke="#b96145" stroke-width="2" stroke-linecap="round" opacity="0.72"/>
+                        <path d="M 5 6 C -1 6 -3 10 0 14" fill="none" stroke="#b96145" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+                        <ellipse cx="7" cy="8" rx="4.5" ry="6" fill="#ffb38c" opacity="0.24"/>
+                    </g>
+
                     <!-- Head -->
-                    <ellipse id="baby-head" cx="0" cy="0" rx="44" ry="42" fill="url(#skinGrad)" filter="url(#softShadow)"/>
+                    <ellipse id="baby-head" cx="0" cy="0" rx="54" ry="51" fill="url(#skinGrad)" stroke="#875034" stroke-width="2.8" filter="url(#softShadow)"/>
+                    <path d="M -42 -8 Q -45 18 -34 31" fill="none" stroke="#ffd3a0" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
 
                     <!-- Cheeks -->
-                    <ellipse cx="-28" cy="10" rx="14" ry="10" fill="url(#cheekGrad)"/>
-                    <ellipse cx="28" cy="10" rx="14" ry="10" fill="url(#cheekGrad)"/>
-
-                    <!-- Ears -->
-                    <ellipse cx="-43" cy="5" rx="7" ry="9" fill="#f5c5a3"/>
-                    <ellipse cx="43" cy="5" rx="7" ry="9" fill="#f5c5a3"/>
+                    <ellipse cx="-34" cy="16" rx="15" ry="10" fill="#ff915f" opacity="0.7"/>
+                    <ellipse cx="34" cy="16" rx="15" ry="10" fill="#ff915f" opacity="0.7"/>
 
                     <!-- Left eye group -->
-                    <g id="baby-eye-left" transform="translate(-16,-5)">
+                    <g id="baby-eye-left" class="open-eye" transform="translate(-21,-7)">
                         <!-- Eye white -->
-                        <ellipse cx="0" cy="0" rx="10" ry="10" fill="white"/>
+                        <circle cx="0" cy="0" r="16" fill="white" stroke="#513321" stroke-width="2.3"/>
                         <!-- Iris -->
-                        <ellipse id="iris-left" cx="0" cy="0" rx="7" ry="7" fill="#4f46e5"/>
+                        <circle id="iris-left" cx="0" cy="0" r="12" fill="#17100d"/>
                         <!-- Pupil -->
-                        <ellipse cx="0" cy="0" rx="4" ry="4" fill="#1e1b4b"/>
+                        <circle cx="0" cy="0" r="7" fill="#17100d"/>
                         <!-- Highlight -->
-                        <ellipse cx="2" cy="-2" rx="2" ry="2" fill="white" opacity="0.8"/>
+                        <circle cx="5" cy="-6" r="4.5" fill="white" opacity="0.97"/>
+                        <circle cx="-4" cy="5" r="2" fill="white" opacity="0.72"/>
+                        <circle cx="5" cy="5" r="4" fill="#8ddcff" opacity="0.14"/>
                         <!-- Eyelid (for blinking) -->
-                        <ellipse id="eyelid-left" cx="0" cy="-10" rx="10" ry="10" fill="url(#skinGrad)"/>
+                        <circle id="eyelid-left" cx="0" cy="-17" r="16" fill="url(#skinGrad)" opacity="0"/>
                     </g>
 
                     <!-- Right eye group -->
-                    <g id="baby-eye-right" transform="translate(16,-5)">
-                        <ellipse cx="0" cy="0" rx="10" ry="10" fill="white"/>
-                        <ellipse id="iris-right" cx="0" cy="0" rx="7" ry="7" fill="#4f46e5"/>
-                        <ellipse cx="0" cy="0" rx="4" ry="4" fill="#1e1b4b"/>
-                        <ellipse cx="2" cy="-2" rx="2" ry="2" fill="white" opacity="0.8"/>
-                        <ellipse id="eyelid-right" cx="0" cy="-10" rx="10" ry="10" fill="url(#skinGrad)"/>
+                    <g id="baby-eye-right" class="open-eye" transform="translate(21,-7)">
+                        <circle cx="0" cy="0" r="16" fill="white" stroke="#513321" stroke-width="2.3"/>
+                        <circle id="iris-right" cx="0" cy="0" r="12" fill="#17100d"/>
+                        <circle cx="0" cy="0" r="7" fill="#17100d"/>
+                        <circle cx="5" cy="-6" r="4.5" fill="white" opacity="0.97"/>
+                        <circle cx="-4" cy="5" r="2" fill="white" opacity="0.72"/>
+                        <circle cx="5" cy="5" r="4" fill="#8ddcff" opacity="0.14"/>
+                        <circle id="eyelid-right" cx="0" cy="-17" r="16" fill="url(#skinGrad)" opacity="0"/>
                     </g>
-
+                    <g id="sleep-eye-left" transform="translate(-21,-7)" opacity="0">
+                        <path d="M -13 1 Q 0 9 13 1" fill="none" stroke="#513321" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    <g id="sleep-eye-right" transform="translate(21,-7)" opacity="0">
+                        <path d="M -13 1 Q 0 9 13 1" fill="none" stroke="#513321" stroke-width="3" stroke-linecap="round"/>
+                    </g>
                     <!-- Nose -->
-                    <ellipse cx="0" cy="8" rx="5" ry="4" fill="#e8a88a" opacity="0.6"/>
+                    <path d="M -3 6 Q 4 1 7 8 Q 3 13 -5 12" fill="none" stroke="#8f4b36" stroke-width="3" stroke-linecap="round"/>
 
                     <!-- Mouth -->
                     <g id="baby-mouth">
                         <!-- Happy mouth (default) -->
-                        <path id="mouth-happy" d="M -10 18 Q 0 28 10 18" stroke="#d08060" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <path id="mouth-happy" d="M -17 20 Q 0 41 18 20 Q 6 51 -13 38 Q -23 30 -17 20"
+                              fill="#3c1b1d" stroke="#513321" stroke-width="2.3" stroke-linejoin="round"/>
                         <!-- Sad mouth (hidden) -->
-                        <path id="mouth-sad" d="M -10 24 Q 0 16 10 24" stroke="#d08060" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0"/>
+                        <path id="mouth-sad" d="M -13 29 Q 0 17 13 29" stroke="#513321" stroke-width="3" fill="none" stroke-linecap="round" opacity="0"/>
                         <!-- Open mouth (feeding) -->
-                        <ellipse id="mouth-open" cx="0" cy="22" rx="8" ry="6" fill="#c97060" opacity="0"/>
+                        <ellipse id="mouth-open" cx="0" cy="23" rx="9" ry="7" fill="#3c1b1d" stroke="#513321" stroke-width="2" opacity="0"/>
                         <!-- Laughing mouth (hidden) -->
-                        <path id="mouth-laugh" d="M -12 18 Q 0 32 12 18 Z" fill="#d08060" opacity="0"/>
+                        <path id="mouth-laugh" d="M -21 17 Q 0 49 21 17 Q 7 58 -13 43 Q -27 31 -21 17"
+                              fill="#3c1b1d" stroke="#513321" stroke-width="2.4" stroke-linejoin="round" opacity="0"/>
                     </g>
+                    <path id="mouth-tongue" d="M -5 34 Q 4 29 13 34 Q 8 43 -3 43 Q -9 39 -5 34" fill="#f2785f" opacity="0.88"/>
 
                     <!-- Hair -->
-                    <ellipse cx="0" cy="-38" rx="20" ry="10" fill="#8B4513" opacity="0.8"/>
-                    <ellipse cx="-15" cy="-42" rx="12" ry="8" fill="#8B4513" opacity="0.8"/>
-                    <ellipse cx="15" cy="-42" rx="12" ry="8" fill="#8B4513" opacity="0.8"/>
+                    <path d="M -11 -43 C -8 -60 3 -73 15 -75 C 30 -78 39 -63 31 -51 C 25 -42 13 -45 15 -55 C 8 -53 3 -47 -3 -39 C -7 -39 -10 -40 -11 -43 Z"
+                          fill="#9a5728" stroke="#513321" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M -3 -45 C 1 -61 11 -69 22 -67 C 31 -65 32 -56 25 -53 C 19 -50 15 -54 18 -59"
+                          fill="none" stroke="#c47a32" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 5 -48 C 13 -58 24 -59 28 -52" fill="none" stroke="#6f3a20" stroke-width="2.1" stroke-linecap="round" opacity="0.58"/>
+                    <path d="M 1 -41 C 8 -49 16 -47 18 -40" fill="none" stroke="#d28a45" stroke-width="1.7" stroke-linecap="round" opacity="0.75"/>
 
                     <!-- Tears (hidden by default) -->
                     <ellipse id="tear-left" cx="-24" cy="18" rx="4" ry="6" fill="#60a5fa" opacity="0"/>
